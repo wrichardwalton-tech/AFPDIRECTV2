@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/lib/**"]
+
+[functions."nightly-export"]
+  schedule = "0 11 * * *"
