@@ -1309,7 +1309,8 @@
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok || !json.url) {
-          throw new Error(json.error || "Could not start checkout");
+          const detail = json.error || json.errorMessage || ("HTTP " + res.status);
+          throw new Error(detail);
         }
         window.location.href = json.url;
       } catch (err) {

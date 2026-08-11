@@ -6,13 +6,9 @@ const {
   newEnrollmentId,
 } = require("./db");
 
-/**
- * Persist full enrollment payload as pending (or update).
- * One enrollments row + N members rows (primary + dependents) in Sedera shape.
- */
 async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
   const db = getDb();
-  await ensureSchema(db);
+  await ensureSchema();
 
   const id = newEnrollmentId();
   const householdId = newHouseholdId();
@@ -56,7 +52,7 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
     ],
   });
 
-  const primary = {
+  await insertMember(db, {
     enrollment_id: id,
     household_id: householdId,
     group_id: groupId,
@@ -81,9 +77,7 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
     dpc_vpc_provider: dpc,
     telemedicine: "",
     start_date: startDate,
-  };
-
-  await insertMember(db, primary);
+  });
 
   const deps = Array.isArray(payload.dependents) ? payload.dependents : [];
   for (const d of deps) {
@@ -166,7 +160,7 @@ function normalizeGender(g) {
 
 async function markEnrollmentPaid({ enrollmentId, stripeSessionId, email }) {
   const db = getDb();
-  await ensureSchema(db);
+  await ensureSchema();
   const now = new Date().toISOString();
 
   if (enrollmentId) {
@@ -200,12 +194,13 @@ async function attachStripeSession(enrollmentId, stripeSessionId) {
 
 async function fetchPaidMembersForExport() {
   const db = getDb();
-  await ensureSchema(db);
+  await ensureSchema();
   const rs = await db.execute({
     sql: `SELECT m.* FROM members m
           INNER JOIN enrollments e ON e.id = m.enrollment_id
           WHERE e.status = 'paid'
           ORDER BY e.paid_at ASC, m.id ASC`,
+    args: [],
   });
   return rs.rows;
 }
