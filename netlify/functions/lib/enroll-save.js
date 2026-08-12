@@ -24,9 +24,9 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
     sql: `INSERT INTO enrollments (
       id, status, stripe_session_id, stripe_customer_email,
       household_type, age_band, iua, tobacco_household, tobacco_surcharge,
-      afp_portion, sedera_portion, total, start_date, how_heard, notes, newsletter,
+      afp_portion, sedera_portion, platform_portion, total, start_date, how_heard, notes, newsletter,
       group_id, household_id, created_at, updated_at, raw_json
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     args: [
       id,
       "pending",
@@ -39,6 +39,7 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
       Number(payload.tobaccoSurcharge) || 0,
       Number(payload.afpPortion) || null,
       Number(payload.sederaPortion) || null,
+      Number(payload.platformPortion) || 0,
       Number(payload.total) || null,
       startDate,
       payload.howHeard || null,
