@@ -744,8 +744,8 @@
             <h3 class="text-xl font-bold text-white mb-1">Primary Member</h3>
             <p class="text-sm text-muted mb-5">The main person on the membership.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><label class="block text-sm text-zinc-300 mb-1">First Name *</label><input required name="firstName" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
-              <div><label class="block text-sm text-zinc-300 mb-1">Last Name *</label><input required name="lastName" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
+              <div><label class="block text-sm text-zinc-300 mb-1">First Name *</label><input required name="firstName" type="text" autocomplete="given-name" onblur="this.value=this.value.trim()" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
+              <div><label class="block text-sm text-zinc-300 mb-1">Last Name *</label><input required name="lastName" type="text" autocomplete="family-name" onblur="this.value=this.value.trim()" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div><label class="block text-sm text-zinc-300 mb-1">Date of Birth *</label><input required name="dob" id="primaryDob" type="date" onchange="updateSummary()" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
@@ -753,14 +753,14 @@
               <div><label class="block text-sm text-zinc-300 mb-1">Smoker? *</label><select required name="smoker" id="primarySmoker" onchange="updateSummary()" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white"><option value="No">No</option><option value="Yes">Yes</option></select></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><label class="block text-sm text-zinc-300 mb-1">Phone *</label><input required name="phone" type="tel" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
-              <div><label class="block text-sm text-zinc-300 mb-1">Email *</label><input required name="email" type="email" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
+              <div><label class="block text-sm text-zinc-300 mb-1">Phone *</label><input required name="phone" id="enrollPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(806) 555-1234" maxlength="14" oninput="formatPhoneInput(this)" onblur="formatPhoneInput(this)" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
+              <div><label class="block text-sm text-zinc-300 mb-1">Email *</label><input required name="email" id="enrollEmail" type="email" autocomplete="email" onblur="this.value=this.value.trim().toLowerCase()" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
             </div>
             <div><label class="block text-sm text-zinc-300 mb-1">Street Address *</label><input required name="address1" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div class="col-span-2"><label class="block text-sm text-zinc-300 mb-1">City *</label><input required name="city" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
               <div><label class="block text-sm text-zinc-300 mb-1">State *</label><select required name="state" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white"><option value="">—</option><option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option><option>DC</option></select></div>
-              <div><label class="block text-sm text-zinc-300 mb-1">Zip *</label><input required name="zip" type="text" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
+              <div><label class="block text-sm text-zinc-300 mb-1">Zip *</label><input required name="zip" id="enrollZip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="79101" maxlength="10" oninput="formatZipInput(this)" onblur="formatZipInput(this)" class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white" /></div>
             </div>
             <div>
               <label class="block text-sm text-zinc-300 mb-1">Desired Start Date *</label>
@@ -1246,6 +1246,46 @@
       if (block) block.remove();
       syncHouseholdFromDependents();
     }
+
+    function digitsOnly(s) {
+      return String(s || "").replace(/\D/g, "");
+    }
+    /** Format US phone as (XXX) XXX-XXXX while typing; stores display value in the input */
+    function formatPhoneInput(el) {
+      if (!el) return;
+      var d = digitsOnly(el.value);
+      if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
+      d = d.slice(0, 10);
+      var out = d;
+      if (d.length >= 7) out = "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6);
+      else if (d.length >= 4) out = "(" + d.slice(0, 3) + ") " + d.slice(3);
+      else if (d.length >= 1) out = "(" + d;
+      el.value = out;
+    }
+    function normalizePhone(value) {
+      var d = digitsOnly(value);
+      if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
+      return d.slice(0, 10);
+    }
+    function formatZipInput(el) {
+      if (!el) return;
+      var d = digitsOnly(el.value).slice(0, 9);
+      if (d.length > 5) el.value = d.slice(0, 5) + "-" + d.slice(5);
+      else el.value = d;
+    }
+    function normalizeZip(value) {
+      var d = digitsOnly(value).slice(0, 9);
+      if (d.length === 9) return d.slice(0, 5) + "-" + d.slice(5);
+      return d.slice(0, 5);
+    }
+    function isValidUsPhone(value) {
+      return normalizePhone(value).length === 10;
+    }
+    function isValidZip(value) {
+      var d = digitsOnly(value);
+      return d.length === 5 || d.length === 9;
+    }
+
     async function handleSubmit(e) {
       e.preventDefault();
       const form = e.target;
@@ -1253,6 +1293,25 @@
       const depErr = validateDependentsForHousehold();
       if (depErr) { alert(depErr); return false; }
       if (!form.startDate.value) { alert("Please choose a start date."); return false; }
+
+      formatPhoneInput(form.phone);
+      formatZipInput(form.zip);
+      form.email.value = form.email.value.trim().toLowerCase();
+      form.firstName.value = form.firstName.value.trim();
+      form.lastName.value = form.lastName.value.trim();
+      form.address1.value = form.address1.value.trim();
+      form.city.value = form.city.value.trim();
+
+      if (!isValidUsPhone(form.phone.value)) {
+        alert("Please enter a valid 10-digit US phone number.");
+        form.phone.focus();
+        return false;
+      }
+      if (!isValidZip(form.zip.value)) {
+        alert("Please enter a valid 5-digit ZIP code (or ZIP+4).");
+        form.zip.focus();
+        return false;
+      }
 
       const hasSmoker = householdHasSmoker();
       const surcharge = hasSmoker ? 75 : 0;
@@ -1283,12 +1342,12 @@
         dob: form.dob.value,
         gender: form.gender.value,
         smoker: form.smoker.value,
-        phone: form.phone.value.trim(),
-        email: form.email.value.trim(),
+        phone: normalizePhone(form.phone.value),
+        email: form.email.value.trim().toLowerCase(),
         address1: form.address1.value.trim(),
         city: form.city.value.trim(),
         state: form.state.value.trim(),
-        zip: form.zip.value.trim(),
+        zip: normalizeZip(form.zip.value),
         startDate: form.startDate.value,
         howHeard: form.howHeard.value,
         notes: form.notes.value,
