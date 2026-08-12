@@ -296,7 +296,7 @@
               <p class="text-zinc-500 mb-8">Two tools. One honest split. You see the number before you commit.</p>
               <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="startScreening()" class="px-7 py-4 rounded-xl bg-electric-green text-charcoal font-bold text-lg hover:bg-electric-green-dim transition-colors">Quick Fit Check →</button>
-                <a href="#calculator" class="px-7 py-4 rounded-xl bg-zinc-800 text-zinc-200 font-bold text-lg hover:bg-zinc-700 transition-colors text-center">See your price</a>
+                <button type="button" onclick="goToCalculator()" class="px-7 py-4 rounded-xl bg-zinc-800 text-zinc-200 font-bold text-lg hover:bg-zinc-700 transition-colors text-center">See your price</button>
               </div>
               <p class="text-xs text-zinc-500 mt-5">Local relationship care. Community medical cost sharing for large eligible needs. Eyes open.</p>
             </div>
@@ -562,7 +562,7 @@
           <p class="text-zinc-400 mb-8">See the number. Run the fit check. Or start a conversation. No pressure either way.</p>
           <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button onclick="startScreening()" class="px-7 py-4 rounded-xl bg-electric-green text-charcoal font-bold hover:bg-electric-green-dim transition-colors">Quick Fit Check →</button>
-            <a href="#calculator" class="px-7 py-4 rounded-xl bg-zinc-800 text-zinc-200 font-bold hover:bg-zinc-700 transition-colors">See your price</a>
+            <button type="button" onclick="goToCalculator()" class="px-7 py-4 rounded-xl bg-zinc-800 text-zinc-200 font-bold hover:bg-zinc-700 transition-colors">See your price</button>
           </div>
           <p class="text-xs text-zinc-500 mt-8 leading-relaxed max-w-xl mx-auto">Medical cost sharing is not health insurance. Sedera is not an insurance company. Membership is voluntary. Members remain responsible for payment of medical bills. Amarillo Family Physicians Direct Membership is a Direct Primary Care membership, not insurance. Sharing of medical expenses is not guaranteed and is subject to the Membership Guidelines.</p>
         </section>
@@ -994,7 +994,26 @@
     }
     function viewFromHash() {
       const h = (location.hash || "").toLowerCase().replace(/^#/, "");
-      return h === "employers" ? "employers" : "individuals";
+      if (h === "employers") return "employers";
+      return "individuals";
+    }
+    function goToCalculator() {
+      // Ensure individuals landing is visible (calculator lives there)
+      document.getElementById("screeningFlow").classList.add("hidden");
+      document.getElementById("enroll").classList.add("hidden");
+      document.getElementById("viewEmployers").classList.add("hidden");
+      document.getElementById("viewIndividuals").classList.remove("hidden");
+      document.getElementById("mainContent").classList.remove("hidden");
+      document.getElementById("navIndividuals").className = "text-electric-green font-medium";
+      document.getElementById("navEmployers").className = "text-zinc-400 hover:text-white";
+      renderCalc();
+      if (location.hash !== "#calculator") {
+        history.replaceState(null, "", "#calculator");
+      }
+      requestAnimationFrame(function () {
+        const calc = document.getElementById("calculator");
+        if (calc) calc.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     }
     function ageFromDob(dobStr) {
       if (!dobStr) return null;
@@ -1417,8 +1436,16 @@
       }
     }
     updateProgress(); populateStartDates(); renderCalc();
-    showView(viewFromHash(), false);
-    window.addEventListener("hashchange", function () { showView(viewFromHash(), false); });
+    function applyHashRoute() {
+      const h = (location.hash || "").toLowerCase().replace(/^#/, "");
+      if (h === "calculator") {
+        goToCalculator();
+        return;
+      }
+      showView(viewFromHash(), false);
+    }
+    applyHashRoute();
+    window.addEventListener("hashchange", applyHashRoute);
   </script>
 
 
