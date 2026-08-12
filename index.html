@@ -412,12 +412,13 @@
                 <div class="grid grid-cols-5 gap-1.5" id="iuaBtns"></div>
               </div>
               <div class="bg-charcoal border border-electric-green/30 rounded-xl p-5 mb-6">
-                <div class="flex justify-between items-center mb-2"><span class="text-zinc-400 text-sm">Sedera share</span><span class="text-zinc-300" id="sederaPrice">—</span></div>
-                <div class="flex justify-between items-center mb-3"><span class="text-zinc-400 text-sm">AFP Direct Membership</span><span class="text-zinc-300" id="afpPrice">—</span></div>
-                <div class="border-t border-zinc-700 pt-3 flex justify-between items-center">
+                <div class="flex justify-between items-center mb-1">
                   <span class="font-semibold text-white">Monthly total</span>
                   <span class="text-3xl font-black text-electric-green" id="totalPrice">—</span>
                 </div>
+                <p class="text-xs text-zinc-500 mt-2 leading-relaxed">One price for AFP Direct membership and Sedera membership share, arranged together. Tobacco surcharge (if any) is added at enrollment.</p>
+                <span id="sederaPrice" class="hidden">—</span>
+                <span id="afpPrice" class="hidden">—</span>
               </div>
               <button onclick="goToEnroll()" class="w-full py-4 rounded-xl bg-electric-green text-charcoal font-bold text-lg hover:bg-electric-green-dim transition-colors">Continue to Enrollment →</button>
             </div>
@@ -835,6 +836,7 @@
 
   <script>
     const AFP = { memberOnly: 75, memberSpouse: 135, memberChild: 120, memberFamily: 180 };
+    const MARGIN = 10; // platform / coordination — not Sedera list-bill, not AFP
     const LABELS = { memberOnly: "Member Only", memberSpouse: "Member + Spouse", memberChild: "Member + Child(ren)", memberFamily: "Member + Family" };
     const AGES = ["18-29","30-39","40-49","50-59","60-64"];
     const IUAS = [500,1000,1500,2500,5000];
@@ -848,12 +850,18 @@
     let screenAnswers = {}, currentScreen = 0;
     const totalScreens = 6;
 
-    function money(n) { return "$" + Math.round(n).toLocaleString(); }
+    function money(n) {
+      const x = Math.round(Number(n) * 100) / 100;
+      return "$" + x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
     function updatePrice() {
       const sedera = RATES[household][iua][ageBand], afp = AFP[household], totalEl = document.getElementById("totalPrice");
-      document.getElementById("sederaPrice").textContent = money(sedera);
-      document.getElementById("afpPrice").textContent = money(afp);
-      totalEl.textContent = money(sedera + afp);
+      const shelf = sedera + afp + MARGIN;
+      const sEl = document.getElementById("sederaPrice");
+      const aEl = document.getElementById("afpPrice");
+      if (sEl) sEl.textContent = money(sedera);
+      if (aEl) aEl.textContent = money(afp);
+      totalEl.textContent = money(shelf);
       totalEl.classList.remove("price-pop"); void totalEl.offsetWidth; totalEl.classList.add("price-pop");
     }
     function makeBtns(containerId, items, current, onClick, labelFn) {
@@ -1065,8 +1073,12 @@
     }
 
     function baseMonthly() {
-      return RATES[household][iua][ageBand] + AFP[household];
+      return RATES[household][iua][ageBand] + AFP[household] + MARGIN;
     }
+    function sederaOnly() {
+      return RATES[household][iua][ageBand];
+    }
+
 
     function updateSummary() {
       syncAgeBandFromDobs();
@@ -1316,8 +1328,10 @@
       const hasSmoker = householdHasSmoker();
       const surcharge = hasSmoker ? 75 : 0;
       const afpPortion = AFP[household];
+      const platformPortion = MARGIN;
+      // Sedera list-bill amount = published share + household tobacco surcharge (not platform margin)
       const sederaPortion = RATES[household][iua][ageBand] + surcharge;
-      const total = baseMonthly() + surcharge;
+      const total = baseMonthly() + surcharge; // sedera + AFP + margin + tobacco
 
       const dependents = [];
       document.querySelectorAll("#dependentsList [id^='depBlock']").forEach(block => {
@@ -1336,7 +1350,7 @@
         household, ageBand, iua,
         tobaccoHousehold: hasSmoker,
         tobaccoSurcharge: surcharge,
-        afpPortion, sederaPortion, total,
+        afpPortion, sederaPortion, platformPortion, total,
         firstName: form.firstName.value.trim(),
         lastName: form.lastName.value.trim(),
         dob: form.dob.value,
