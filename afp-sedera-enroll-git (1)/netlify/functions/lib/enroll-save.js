@@ -24,14 +24,14 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
     sql: `INSERT INTO enrollments (
       id, status, stripe_session_id, stripe_customer_email,
       household_type, age_band, iua, tobacco_household, tobacco_surcharge,
-      afp_portion, sedera_portion, total, start_date, how_heard, notes, newsletter,
+      afp_portion, sedera_portion, platform_portion, total, start_date, how_heard, notes, newsletter,
       group_id, household_id, created_at, updated_at, raw_json
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     args: [
       id,
       "pending",
       stripeSessionId || null,
-      payload.email || null,
+      normalizeEmail(payload.email) || null,
       payload.household || null,
       payload.ageBand || null,
       iua,
@@ -39,6 +39,7 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
       Number(payload.tobaccoSurcharge) || 0,
       Number(payload.afpPortion) || null,
       Number(payload.sederaPortion) || null,
+      Number(payload.platformPortion) || 0,
       Number(payload.total) || null,
       startDate,
       payload.howHeard || null,
@@ -61,13 +62,13 @@ async function savePendingEnrollment(payload, { stripeSessionId } = {}) {
     last_name: payload.lastName,
     dob: payload.dob,
     gender: normalizeGender(payload.gender),
-    phone: payload.phone,
-    email: payload.email,
+    phone: normalizePhone(payload.phone),
+    email: normalizeEmail(payload.email),
     address1: payload.address1,
     address2: payload.address2 || "",
     city: payload.city,
     state: payload.state,
-    zipcode: payload.zip,
+    zipcode: normalizeZip(payload.zip),
     relationship: "Primary",
     smoker: payload.smoker === "Yes" ? "Yes" : "No",
     iua,
@@ -148,6 +149,21 @@ async function insertMember(db, m) {
       m.start_date || "",
     ],
   });
+}
+
+
+function normalizePhone(value) {
+  let d = String(value || "").replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1")) d = d.slice(1);
+  return d.slice(0, 10);
+}
+function normalizeZip(value) {
+  const d = String(value || "").replace(/\D/g, "").slice(0, 9);
+  if (d.length === 9) return d.slice(0, 5) + "-" + d.slice(5);
+  return d.slice(0, 5);
+}
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function normalizeGender(g) {

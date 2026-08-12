@@ -111,6 +111,7 @@ async function ensureSchema() {
       tobacco_surcharge REAL DEFAULT 0,
       afp_portion REAL,
       sedera_portion REAL,
+      platform_portion REAL,
       total REAL,
       start_date TEXT,
       how_heard TEXT,
@@ -154,6 +155,12 @@ async function ensureSchema() {
     `CREATE INDEX IF NOT EXISTS idx_members_enrollment ON members(enrollment_id)`,
     `CREATE INDEX IF NOT EXISTS idx_enrollments_stripe ON enrollments(stripe_session_id)`,
   ]);
+  // Existing DBs created before platform_portion
+  try {
+    await execute(`ALTER TABLE enrollments ADD COLUMN platform_portion REAL`, []);
+  } catch (_) {
+    /* column may already exist */
+  }
 }
 
 function benefitTier(household) {
